@@ -1,15 +1,11 @@
-class TwoFactorAuthenticationAddTo<%= table_name.camelize %> < ActiveRecord::Migration
-  disable_ddl_transaction!
-
+class DeviseMultiFactorAddTo<%= table_name.camelize %> < ActiveRecord::Migration[6.1]
   def change
-    add_column :<%= table_name %>, :second_factor_attempts_count, :integer, default: 0
-    add_column :<%= table_name %>, :encrypted_otp_secret_key, :string
-    add_column :<%= table_name %>, :encrypted_otp_secret_key_iv, :string
-    add_column :<%= table_name %>, :encrypted_otp_secret_key_salt, :string
-    add_column :<%= table_name %>, :direct_otp, :string
-    add_column :<%= table_name %>, :direct_otp_sent_at, :datetime
-    add_column :<%= table_name %>, :totp_timestamp, :timestamp
-
-    add_index :<%= table_name %>, :encrypted_otp_secret_key, unique: true, algorithm: :concurrently
+    change_table :<%= table_name %>, bulk: true do |t|
+      t.integer :second_factor_attempts_count, default: 0, null: false
+      t.string :otp_secret_ciphertext
+      t.string :direct_otp
+      t.datetime :direct_otp_sent_at
+      t.integer :totp_timestamp
+    end
   end
 end

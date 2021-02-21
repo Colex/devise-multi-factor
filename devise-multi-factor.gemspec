@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "two_factor_authentication/version"
+require "devise_multi_factor/version"
 
 Gem::Specification.new do |s|
-  s.name        = "two_factor_authentication"
-  s.version     = TwoFactorAuthentication::VERSION.dup
-  s.authors     = ["Dmitrii Golub"]
-  s.email       = ["dmitrii.golub@gmail.com"]
-  s.homepage    = "https://github.com/Houdini/two_factor_authentication"
+  s.name        = "devise-multi-factor"
+  s.version     = DeviseMultiFactor::VERSION.dup
+  s.authors     = ["Dmitrii Golub", "Alex Santos"]
+  s.email       = ["hello@alexcsantos.com"]
+  s.homepage    = "https://github.com/Colex/devise_multi_factor"
   s.summary     = %q{Two factor authentication plugin for devise}
   s.description = <<-EOF
     ### Features ###
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
     * your own sms logic
   EOF
 
-  s.rubyforge_project = "two_factor_authentication"
+  s.rubyforge_project = "devise_multi_factor"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
