@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = DeviseMultiFactor::VERSION.dup
   s.authors     = ["Dmitrii Golub", "Alex Santos"]
   s.email       = ["hello@alexcsantos.com"]
-  s.homepage    = "https://github.com/Colex/devise_multi_factor"
+  s.homepage    = "https://github.com/Colex/devise-multi-factor"
   s.summary     = %q{Two factor authentication plugin for devise}
   s.description = <<-EOF
     ### Features ###
