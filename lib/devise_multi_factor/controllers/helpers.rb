@@ -9,13 +9,17 @@ module DeviseMultiFactor
 
       private
 
+      def two_factor_authenticate!
+        Devise.mappings.keys.flatten.any? do |scope|
+          if signed_in?(scope) and warden.session(scope)[DeviseMultiFactor::NEED_AUTHENTICATION]
+            handle_failed_second_factor(scope)
+          end
+        end
+      end
+
       def handle_two_factor_authentication
         unless devise_controller?
-          Devise.mappings.keys.flatten.any? do |scope|
-            if signed_in?(scope) and warden.session(scope)[DeviseMultiFactor::NEED_AUTHENTICATION]
-              handle_failed_second_factor(scope)
-            end
-          end
+          two_factor_authenticate!
         end
       end
 
@@ -38,7 +42,6 @@ module DeviseMultiFactor
         change_path = "#{scope}_two_factor_authentication_path"
         send(change_path)
       end
-
     end
   end
 end

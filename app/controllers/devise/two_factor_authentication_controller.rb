@@ -2,6 +2,7 @@ require 'devise/version'
 
 class Devise::TwoFactorAuthenticationController < DeviseController
   prepend_before_action :authenticate_scope!
+  before_action :two_factor_authenticate!, except: [:show, :update, :resend_code]
   before_action :prepare_and_validate, :handle_two_factor_authentication
 
   def new

@@ -257,16 +257,7 @@ to overwrite/customize user registrations. It should include the lines below, fo
 
    ```ruby
    class RegistrationsController < Devise::RegistrationsController
-     before_action :confirm_two_factor_authenticated, except: [:new, :create, :cancel]
-
-     protected
-
-     def confirm_two_factor_authenticated
-       return if is_fully_authenticated?
-
-       flash[:error] = t('devise.errors.messages.user_not_authenticated')
-       redirect_to user_two_factor_authentication_url
-     end
+     before_action :two_factor_authenticate!, except: [:new, :create, :cancel]
    end
    ```
 
@@ -375,8 +366,6 @@ to set TOTP to DISABLED for a user account:
    ```
    current_user.second_factor_attempts_count=nil
    current_user.encrypted_otp_secret_key=nil
-   current_user.encrypted_otp_secret_key_iv=nil
-   current_user.encrypted_otp_secret_key_salt=nil
    current_user.direct_otp=nil
    current_user.direct_otp_sent_at=nil
    current_user.totp_timestamp=nil

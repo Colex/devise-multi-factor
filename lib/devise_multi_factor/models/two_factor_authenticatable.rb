@@ -1,6 +1,5 @@
 require 'devise_multi_factor/hooks/two_factor_authenticatable'
 require 'rotp'
-require 'encryptor'
 
 module Devise
   module Models
