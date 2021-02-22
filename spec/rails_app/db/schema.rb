@@ -42,11 +42,11 @@ ActiveRecord::Schema.define(version: 2016_02_09_032439) do
     t.string "last_sign_in_ip"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "direct_otp"
+    t.datetime "direct_otp_sent_at"
     t.integer "second_factor_attempts_count", default: 0
     t.string "nickname", limit: 64
     t.string "encrypted_otp_secret_key"
-    t.string "encrypted_otp_secret_key_iv"
-    t.string "encrypted_otp_secret_key_salt"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["encrypted_otp_secret_key"], name: "index_users_on_encrypted_otp_secret_key", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

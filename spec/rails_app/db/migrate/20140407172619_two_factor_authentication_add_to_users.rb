@@ -2,6 +2,8 @@ class TwoFactorAuthenticationAddToUsers < ActiveRecord::Migration[4.2]
   def up
     change_table :users do |t|
       t.string   :otp_secret_key
+      t.string  :direct_otp
+      t.datetime  :direct_otp_sent_at
       t.integer  :second_factor_attempts_count, :default => 0
     end
 

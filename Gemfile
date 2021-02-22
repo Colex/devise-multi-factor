@@ -21,6 +21,8 @@ if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.2.0')
 end
 
 group :test, :development do
+  gem 'byebug'
+  gem 'lockbox'
   gem 'sqlite3'
 end
 

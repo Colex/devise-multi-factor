@@ -60,17 +60,8 @@ devise :database_authenticatable, :registerable, :recoverable, :rememberable,
 Then create your migration file using the Rails generator, such as:
 
 ```
-rails g migration AddTwoFactorFieldsToUsers second_factor_attempts_count:integer encrypted_otp_secret_key:string:index encrypted_otp_secret_key_iv:string encrypted_otp_secret_key_salt:string direct_otp:string direct_otp_sent_at:datetime totp_timestamp:timestamp
+rails g migration AddTwoFactorFieldsToUsers second_factor_attempts_count:integer encrypted_otp_secret_key:string direct_otp:string direct_otp_sent_at:datetime totp_timestamp:integer
 ```
-
-Open your migration file (it will be in the `db/migrate` directory and will be
-named something like `20151230163930_add_two_factor_fields_to_users.rb`), and
-add `unique: true` to the `add_index` line so that it looks like this:
-
-```ruby
-add_index :users, :encrypted_otp_secret_key, unique: true
-```
-Save the file.
 
 #### Complete the setup
 
@@ -80,7 +71,7 @@ Run the migration with:
 
 Add the following line to your model to fully enable two-factor auth:
 
-    has_one_time_password(encrypted: true)
+    has_one_time_password
 
 Set config values in `config/initializers/devise.rb`:
 
@@ -194,7 +185,7 @@ steps:
 1. Generate a migration to add the necessary columns to your model's table:
 
    ```
-   rails g migration AddEncryptionFieldsToUsers encrypted_otp_secret_key:string:index encrypted_otp_secret_key_iv:string encrypted_otp_secret_key_salt:string
+   rails g migration AddEncryptionFieldsToUsers encrypted_otp_secret_key:string
    ```
 
    Open your migration file (it will be in the `db/migrate` directory and will be

@@ -7,7 +7,7 @@ feature "User of two factor authentication" do
       before do
         user.reload
         if type == 'encrypted'
-          allow(User).to receive(:has_one_time_password).with(encrypted: true)
+          allow(User).to receive(:has_one_time_password)
         end
       end
 

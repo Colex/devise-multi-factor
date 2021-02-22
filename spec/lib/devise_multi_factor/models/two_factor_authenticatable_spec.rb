@@ -138,7 +138,7 @@ describe Devise::Models::TwoFactorAuthenticatable do
 
         it "returns uri with user's email" do
           expect(instance.provisioning_uri).
-            to match(%r{otpauth://totp/houdini@example.com\?secret=\w{32}})
+            to match(%r{otpauth://totp/houdini%40example.com\?secret=\w{32}})
         end
 
         it 'returns uri with issuer option' do
@@ -179,35 +179,48 @@ describe Devise::Models::TwoFactorAuthenticatable do
     it_behaves_like 'generate_totp_secret', EncryptedUser
   end
 
-  describe '#confirm_totp_secret' do
-    shared_examples 'confirm_totp_secret' do |klass|
+  describe '#enroll_totp!' do
+    shared_examples 'enroll_totp!' do |klass|
       let(:instance) { klass.new }
       let(:secret) { instance.generate_totp_secret }
       let(:totp_helper) { TotpHelper.new(secret, instance.class.otp_length) }
 
-      it 'populates otp_secret_key column when given correct code' do
-        instance.confirm_totp_secret(secret, totp_helper.totp_code)
+      describe 'when given correct code' do
+        it 'populates otp_secret_key column' do
+          instance.enroll_totp!(secret, totp_helper.totp_code)
 
-        expect(instance.otp_secret_key).to match(secret)
+          expect(instance.otp_secret_key).to match(secret)
+        end
+
+        it 'updates the encrypted_otp_secret_key and otp totp_timestamp' do
+          allow(instance).to receive(:update_columns).and_return(true)
+          allow_any_instance_of(ROTP::TOTP).to receive(:verify).and_return(15445051)
+
+          instance.enroll_totp!(secret, totp_helper.totp_code)
+
+          expect(instance).to have_received(:update_columns)
+            .with(totp_timestamp: 15445051, otp_secret_key: secret)
+        end
+
+        it 'returns true' do
+          expect(instance.enroll_totp!(secret, totp_helper.totp_code)).to be true
+        end
       end
 
-      it 'does not populate otp_secret_key when when given incorrect code' do
-        instance.confirm_totp_secret(secret, '123')
-        expect(instance.otp_secret_key).to be_nil
-      end
+      describe 'when given incorrect code' do
+        it 'does not populate otp_secret_key' do
+          instance.enroll_totp!(secret, '123')
+          expect(instance.otp_secret_key).to be_nil
+        end
 
-      it 'returns true when given correct code' do
-        expect(instance.confirm_totp_secret(secret, totp_helper.totp_code)).to be true
+        it 'returns false' do
+          expect(instance.enroll_totp!(secret, '123')).to be false
+        end
       end
-
-      it 'returns false when given incorrect code' do
-        expect(instance.confirm_totp_secret(secret, '123')).to be false
-      end
-
     end
 
-    it_behaves_like 'confirm_totp_secret', GuestUser
-    it_behaves_like 'confirm_totp_secret', EncryptedUser
+    it_behaves_like 'enroll_totp!', GuestUser
+    it_behaves_like 'enroll_totp!', EncryptedUser
   end
 
   describe '#max_login_attempts' do
@@ -247,79 +260,22 @@ describe Devise::Models::TwoFactorAuthenticatable do
     context 'when encrypted: true option is passed' do
       let(:instance) { EncryptedUser.new }
 
-      it 'encrypts otp_secret_key with iv, salt, and encoding' do
+      it 'encrypts otp_secret_key' do
         instance.otp_secret_key = '2z6hxkdwi3uvrnpn'
 
         expect(instance.encrypted_otp_secret_key).to match(/.{44}/)
-
-        expect(instance.encrypted_otp_secret_key_iv).to match(/.{24}/)
-
-        expect(instance.encrypted_otp_secret_key_salt).to match(/.{25}/)
       end
 
       it 'does not encrypt a nil otp_secret_key' do
         instance.otp_secret_key = nil
 
         expect(instance.encrypted_otp_secret_key).to be_nil
-
-        expect(instance.encrypted_otp_secret_key_iv).to be_nil
-
-        expect(instance.encrypted_otp_secret_key_salt).to be_nil
       end
 
       it 'does not encrypt an empty otp_secret_key' do
         instance.otp_secret_key = ''
 
         expect(instance.encrypted_otp_secret_key).to eq ''
-
-        expect(instance.encrypted_otp_secret_key_iv).to be_nil
-
-        expect(instance.encrypted_otp_secret_key_salt).to be_nil
-      end
-
-      it 'raises an error when Devise.otp_secret_encryption_key is not set' do
-        allow(Devise).to receive(:otp_secret_encryption_key).and_return nil
-
-        # This error is raised by the encryptor gem
-        expect { instance.otp_secret_key = '2z6hxkdwi3uvrnpn' }.
-          to raise_error ArgumentError
-      end
-
-      it 'passes in the correct options to Encryptor.
-          We test here output of
-          Devise::Models::TwoFactorAuthenticatable::EncryptionInstanceMethods.encryption_options_for' do
-        instance.otp_secret_key = 'testing'
-        iv = instance.encrypted_otp_secret_key_iv
-        salt = instance.encrypted_otp_secret_key_salt
-
-        # it's important here to put the same crypto algorithm from that method
-        encrypted = Encryptor.encrypt(
-          value: 'testing',
-          key: Devise.otp_secret_encryption_key,
-          iv: iv.unpack('m').first,
-          salt: salt.unpack('m').first,
-          algorithm: 'aes-256-cbc'
-        )
-
-        expect(instance.encrypted_otp_secret_key).to eq [encrypted].pack('m')
-      end
-
-      it 'varies the iv per instance' do
-        instance.otp_secret_key = 'testing'
-        user2 = EncryptedUser.new
-        user2.otp_secret_key = 'testing'
-
-        expect(user2.encrypted_otp_secret_key_iv).
-          to_not eq instance.encrypted_otp_secret_key_iv
-      end
-
-      it 'varies the salt per instance' do
-        instance.otp_secret_key = 'testing'
-        user2 = EncryptedUser.new
-        user2.otp_secret_key = 'testing'
-
-        expect(user2.encrypted_otp_secret_key_salt).
-          to_not eq instance.encrypted_otp_secret_key_salt
       end
     end
   end

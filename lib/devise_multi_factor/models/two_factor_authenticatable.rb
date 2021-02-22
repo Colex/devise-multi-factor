@@ -15,8 +15,8 @@ module Devise
             key: otp_secret_encryption_key,
             encrypted_attribute: 'encrypted_otp_secret_key',
           }.compact
-          encrypt_options = encrypt_options.merge(options[:encrypts]) if options[:encrypts].is_a?(Hash)
-          encrypts(:otp_secret_key, encrypt_options || {}) if options[:encrypts].present?
+          encrypt_options = encrypt_options.merge(options[:encrypt]) if options[:encrypt].is_a?(Hash)
+          encrypts(:otp_secret_key, encrypt_options || {})
         end
 
         def generate_totp_secret
@@ -72,14 +72,14 @@ module Devise
           ROTP::TOTP.new(totp_secret, options).provisioning_uri(account)
         end
 
-        def enroll_totp!(secret_key, code)
-          return false unless authenticate_totp(code, { otp_secret_key: secret_key })
+        def enroll_totp!(otp_secret_key, code)
+          return false unless authenticate_totp(code, { otp_secret_key: otp_secret_key })
 
           update_columns(totp_timestamp: totp_timestamp, otp_secret_key: otp_secret_key)
         end
 
         def need_two_factor_authentication?(request)
-          true
+          totp_enabled?
         end
 
         def send_new_otp(options = {})
@@ -114,7 +114,7 @@ module Devise
         def create_direct_otp(options = {})
           # Create a new random OTP and store it in the database
           digits = options[:length] || self.class.direct_otp_length || 6
-          update_attributes(
+          update_columns(
             direct_otp: random_base10(digits),
             direct_otp_sent_at: Time.now.utc
           )
@@ -135,7 +135,7 @@ module Devise
         end
 
         def clear_direct_otp
-          update_attributes(direct_otp: nil, direct_otp_sent_at: nil)
+          update_columns(direct_otp: nil, direct_otp_sent_at: nil)
         end
       end
     end
