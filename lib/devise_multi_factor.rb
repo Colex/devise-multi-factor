@@ -48,6 +48,7 @@ module DeviseMultiFactor
 end
 
 Devise.add_module :two_factor_authenticatable, :model => 'devise_multi_factor/models/two_factor_authenticatable', :controller => :two_factor_authentication, :route => :two_factor_authentication
+Devise.add_module :totp_enrollable, model: 'devise_multi_factor/models/totp_enrollable', controller: :totp, route: :totp
 
 require 'devise_multi_factor/orm/active_record' if defined?(ActiveRecord::Base)
 require 'devise_multi_factor/routes'

@@ -12,7 +12,8 @@ This version uses [Lockbox](https://github.com/ankane/lockbox) to manage the enc
 * Configurable max login attempts
 * Customizable logic to determine if a user needs two factor authentication
 * Configurable period where users won't be asked for 2FA again
-* Option to encrypt the TOTP secret in the database
+* TOTP secret key automatically encrypted in DB
+* Enroll form for TOTP using `:totp_enrollable` on your model
 
 ## Configuration
 
@@ -258,62 +259,6 @@ to overwrite/customize user registrations. It should include the lines below, fo
    ```ruby
    class RegistrationsController < Devise::RegistrationsController
      before_action :two_factor_authenticate!, except: [:new, :create, :cancel]
-   end
-   ```
-
-#### Critical Security Note! Add 2FA validation to your custom user actions
-
-Make sure you are passing the 2FA secret codes securely and checking for them upon critical user actions, such as API key updates, user email or pgp pubkey updates, or any other changess to private/secure account-related details. Validate the secret during the initial 2FA key/secret verification by the user also, of course.
-
- For example, a simple account_controller.rb may look something like this:
-
-   ```
-   require 'json'
-
-   class AccountController < ApplicationController
-     before_action :require_signed_in!
-     before_action :authenticate_user!
-     respond_to :html, :json
-
-     def account_API
-       resp = {}
-       begin
-         if(account_params["twoFAKey"] && account_params["twoFASecret"])
-           current_user.otp_secret_key = account_params["twoFAKey"]
-           if(current_user.authenticate_totp(account_params["twoFASecret"]))
-             # user has validated their temporary 2FA code, save it to their account, enable 2FA on this account
-             current_user.save!
-             resp['success'] = "passed 2FA validation!"
-           else
-             resp['error'] = "failed 2FA validation!"
-           end
-         elsif(param[:userAccountStuff] && param[:userAccountWidget])
-           #before updating important user account stuff and widgets,
-           #check to see that the 2FA secret has also been passed in, and verify it...
-           if(account_params["twoFASecret"] && current_user.totp_enabled? && current_user.authenticate_totp(account_params["twoFASecret"]))
-             # user has passed 2FA checks, do cool user account stuff here
-             ...
-           else
-             # user failed 2FA check! No cool user stuff happens!
-              resp[error] = 'You failed 2FA validation!'
-           end
-
-             ...
-           end
-         else
-           resp['error'] = 'unknown format error, not saved!'
-         end
-       rescue Exception => e
-         puts "WARNING: account api threw error : '#{e}' for user #{current_user.username}"
-         #print "error trace: #{e.backtrace}\n"
-         resp['error'] = "unanticipated server response"
-       end
-       render json: resp.to_json
-     end
-
-     def account_params
-       params.require(:twoFA).permit(:userAccountStuff, :userAcountWidget, :twoFAKey, :twoFASecret)
-     end
    end
    ```
 

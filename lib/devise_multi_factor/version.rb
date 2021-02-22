@@ -1,3 +1,3 @@
 module DeviseMultiFactor
-  VERSION = "3.1.0".freeze
+  VERSION = "3.1.4".freeze
 end
