@@ -1,0 +1,14 @@
+Two Factor Authentication Setup
+
+<p><%= flash[:error] %></p>
+
+<%= image_tag(@qr_code) if @qr_code.present? %>
+
+<p>Authenticator Secret: <%= @otp_secret %>
+
+<%= form_for resource, url: send("#{resource_name}_two_factor_authentication_path"), method: :post do |f| %>
+  <label>Authenticator Code:</label>
+  <%= hidden_field_tag :otp_secret_signature, @otp_secret_signature %>
+  <%= text_field_tag :otp_attempt, '' %>
+  <%= f.submit %>
+<% end %>

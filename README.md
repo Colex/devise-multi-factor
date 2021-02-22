@@ -337,7 +337,7 @@ Make sure you are passing the 2FA secret codes securely and checking for them up
 
 
 ### Example App
-
+(This gem is not 100% compatible with this example app)
 [TwoFactorAuthenticationExample](https://github.com/Houdini/TwoFactorAuthenticationExample)
 
 

@@ -11,13 +11,23 @@ module Devise
         def has_one_time_password(options = {})
           include InstanceMethodsOnActivation
 
-          encrypt_options = { key: 'encrypted_otp_secret_key' }
-          encrypt_options = encrypt_options.merge(options[:encrypt]) if options[:encrypt].is_a?(Hash)
-          encrypts(:otp_secret, encrypt_options || {}) if options[:encrypt].present?
+          encrypt_options = {
+            key: otp_secret_encryption_key,
+            encrypted_attribute: 'encrypted_otp_secret_key',
+          }.compact
+          encrypt_options = encrypt_options.merge(options[:encrypts]) if options[:encrypts].is_a?(Hash)
+          encrypts(:otp_secret_key, encrypt_options || {}) if options[:encrypts].present?
+        end
+
+        def generate_totp_secret
+          # ROTP gem since version 5 to version 5.1
+          # at version 5.1 ROTP gem reinstates.
+          # Details: https://github.com/mdp/rotp/blob/master/CHANGELOG.md#510
+          ROTP::Base32.try(:random) || ROTP::Base32.random_base32
         end
 
         ::Devise::Models.config(
-          self, :max_login_attempts, :allowed_otp_drift_seconds, :otp_length,
+          self, :max_login_attempts, :allowed_otp_drift_seconds, :otp_issuer, :otp_length,
           :remember_otp_session_for_seconds, :otp_secret_encryption_key,
           :direct_otp_length, :direct_otp_valid_for, :totp_timestamp, :delete_cookie_on_logout
         )
@@ -32,12 +42,13 @@ module Devise
 
         def authenticate_direct_otp(code)
           return false if direct_otp.nil? || direct_otp != code || direct_otp_expired?
+
           clear_direct_otp
           true
         end
 
         def authenticate_totp(code, options = {})
-          totp_secret = options[:otp_secret] || otp_secret
+          totp_secret = options[:otp_secret_key] || otp_secret_key
           digits = options[:otp_length] || self.class.otp_length
           drift = options[:drift] || self.class.allowed_otp_drift_seconds
           raise "authenticate_totp called with no otp_secret_key set" if totp_secret.nil?
@@ -48,6 +59,7 @@ module Devise
             drift_ahead: drift, drift_behind: drift, after: totp_timestamp
           )
           return false unless new_timestamp
+
           self.totp_timestamp = new_timestamp
           true
         end
@@ -58,6 +70,12 @@ module Devise
           raise "provisioning_uri called with no otp_secret_key set" if totp_secret.nil?
           account ||= email if respond_to?(:email)
           ROTP::TOTP.new(totp_secret, options).provisioning_uri(account)
+        end
+
+        def enroll_totp!(secret_key, code)
+          return false unless authenticate_totp(code, { otp_secret_key: secret_key })
+
+          update_columns(totp_timestamp: totp_timestamp, otp_secret_key: otp_secret_key)
         end
 
         def need_two_factor_authentication?(request)
@@ -89,17 +107,8 @@ module Devise
           respond_to?(:otp_secret_key) && !otp_secret_key.nil?
         end
 
-        def confirm_totp_secret(secret, code, options = {})
-          return false unless authenticate_totp(code, {otp_secret_key: secret})
-          self.otp_secret_key = secret
-          true
-        end
-
         def generate_totp_secret
-          # ROTP gem since version 5 to version 5.1
-          # at version 5.1 ROTP gem reinstates.
-          # Details: https://github.com/mdp/rotp/blob/master/CHANGELOG.md#510
-          ROTP::Base32.try(:random) || ROTP::Base32.random_base32
+          self.class.generate_totp_secret
         end
 
         def create_direct_otp(options = {})
@@ -114,7 +123,7 @@ module Devise
         private
 
         def without_spaces(code)
-          code.gsub(/\s/, '')
+          code.gsub(/[[:space:]]/, '')
         end
 
         def random_base10(digits)

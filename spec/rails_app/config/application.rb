@@ -6,7 +6,7 @@ require "action_mailer/railtie"
 require "sprockets/railtie"
 
 Bundler.require(*Rails.groups)
-require "two_factor_authentication"
+require "devise_multi_factor"
 
 module Dummy
   class Application < Rails::Application
@@ -60,4 +60,3 @@ module Dummy
     config.secret_key_base = 'secretvalue'
   end
 end
-

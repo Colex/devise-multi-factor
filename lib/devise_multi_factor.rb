@@ -12,6 +12,9 @@ module Devise
   mattr_accessor :allowed_otp_drift_seconds
   @@allowed_otp_drift_seconds = 30
 
+  mattr_accessor :otp_issuer
+  @@otp_issuer = nil
+
   mattr_accessor :otp_length
   @@otp_length = 6
 
@@ -25,7 +28,7 @@ module Devise
   @@remember_otp_session_for_seconds = 0
 
   mattr_accessor :otp_secret_encryption_key
-  @@otp_secret_encryption_key = ''
+  @@otp_secret_encryption_key = nil
 
   mattr_accessor :second_factor_resource_id
   @@second_factor_resource_id = 'id'
