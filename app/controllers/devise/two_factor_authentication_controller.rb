@@ -8,7 +8,7 @@ class Devise::TwoFactorAuthenticationController < DeviseController
   end
 
   def update
-    render :show and return if params[:code].nil?
+    render(:show, status: :unprocessable_entity) and return if params[:code].nil?
 
     if resource.authenticate_otp(params[:code])
       after_two_factor_success_for(resource)
