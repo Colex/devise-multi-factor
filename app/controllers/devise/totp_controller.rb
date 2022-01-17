@@ -16,11 +16,11 @@ class Devise::TotpController < DeviseController
     if resource.enroll_totp!(@otp_secret, params[:otp_attempt])
       after_two_factor_enroll_success_for(resource)
     else
-      flash.now[:error] = 'The authenticator code provided was invalid!'
-      render_enroll_form
+      flash.now[:error] = I18n.t('devise.totp_setup.invalid_code')
+      render_enroll_form(status: :unprocessable_entity)
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature
-    redirect_to send("new_#{resource_name}_two_factor_authentication_path"), flash: { error: 'There has been a problem in the configuration process, please try again.' }
+    redirect_to send("new_#{resource_name}_two_factor_authentication_path"), flash: { error: I18n.t('devise.totp_setup.invalid_signature') }
   end
 
   def show
@@ -40,9 +40,9 @@ class Devise::TotpController < DeviseController
       .to_data_url
   end
 
-  def render_enroll_form
+  def render_enroll_form(status: :ok)
     @qr_code = generate_qr_code(@otp_secret)
-    render :new
+    render :new, status: status
   end
 
   def verifier
