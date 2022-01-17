@@ -52,5 +52,6 @@ Devise.add_module :totp_enrollable, model: 'devise_multi_factor/models/totp_enro
 
 require 'devise_multi_factor/orm/active_record' if defined?(ActiveRecord::Base)
 require 'devise_multi_factor/routes'
+require 'devise_multi_factor/remember_tfa_cookie'
 require 'devise_multi_factor/models/two_factor_authenticatable'
 require 'devise_multi_factor/rails'

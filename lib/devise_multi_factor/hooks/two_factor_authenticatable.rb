@@ -1,8 +1,7 @@
 Warden::Manager.after_authentication do |resource, auth, options|
   if auth.env["action_dispatch.cookies"]
-    expected_cookie_value = "#{resource.class}-#{resource.public_send(Devise.second_factor_resource_id)}"
-    actual_cookie_value = auth.env["action_dispatch.cookies"].signed[DeviseMultiFactor::REMEMBER_TFA_COOKIE_NAME]
-    bypass_by_cookie = actual_cookie_value == expected_cookie_value
+    cookie_value = auth.env["action_dispatch.cookies"].signed[DeviseMultiFactor::REMEMBER_TFA_COOKIE_NAME]
+    bypass_by_cookie = DeviseMultiFactor::RememberTFACookie.new.valid_cookie_data?(resource, cookie_value)
   end
 
   if resource.respond_to?(:need_two_factor_authentication?) && !bypass_by_cookie

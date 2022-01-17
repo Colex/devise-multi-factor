@@ -1,7 +1,7 @@
 require 'spec_helper'
 include AuthenticatedModelHelper
 
-feature "User of two factor authentication" do
+feature 'User of two factor authentication' do
   context 'sending two factor authentication code via SMS' do
     shared_examples 'sends and authenticates code' do |user, type|
       before do
@@ -48,62 +48,62 @@ feature "User of two factor authentication" do
     it_behaves_like 'sends and authenticates code', create_user, 'encrypted'
   end
 
-  scenario "must be logged in" do
+  scenario 'must be logged in' do
     visit user_two_factor_authentication_path
 
-    expect(page).to have_content("Welcome Home")
-    expect(page).to have_content("You are signed out")
+    expect(page).to have_content('Welcome Home')
+    expect(page).to have_content('You are signed out')
   end
 
-  context "when logged in" do
+  context 'when logged in' do
     let(:user) { create_user }
 
     background do
       login_as user
     end
 
-    scenario "is redirected to TFA when path requires authentication" do
-      visit dashboard_path + "?A=param%20a&B=param%20b"
+    scenario 'is redirected to TFA when path requires authentication' do
+      visit dashboard_path + '?A=param%20a&B=param%20b'
 
-      expect(page).to_not have_content("Your Personal Dashboard")
+      expect(page).to_not have_content('Your Personal Dashboard')
 
-      fill_in "code", with: SMSProvider.last_message.body
-      click_button "Submit"
+      fill_in 'code', with: SMSProvider.last_message.body
+      click_button 'Submit'
 
-      expect(page).to have_content("Your Personal Dashboard")
-      expect(page).to have_content("You are signed in as Marissa")
-      expect(page).to have_content("Param A is param a")
-      expect(page).to have_content("Param B is param b")
+      expect(page).to have_content('Your Personal Dashboard')
+      expect(page).to have_content('You are signed in as Marissa')
+      expect(page).to have_content('Param A is param a')
+      expect(page).to have_content('Param B is param b')
     end
 
-    scenario "is locked out after max failed attempts" do
+    scenario 'is locked out after max failed attempts' do
       visit user_two_factor_authentication_path
 
       max_attempts = User.max_login_attempts
 
       max_attempts.times do
-        fill_in "code", with: "incorrect#{rand(100)}"
-        click_button "Submit"
+        fill_in 'code', with: "incorrect#{rand(100)}"
+        click_button 'Submit'
 
-        within(".flash.alert") do
-          expect(page).to have_content("Attempt failed")
+        within('.flash.alert') do
+          expect(page).to have_content('Attempt failed')
         end
       end
 
-      expect(page).to have_content("Access completely denied")
-      expect(page).to have_content("You are signed out")
+      expect(page).to have_content('Access completely denied')
+      expect(page).to have_content('You are signed out')
     end
 
-    scenario "cannot retry authentication after max attempts" do
+    scenario 'cannot retry authentication after max attempts' do
       user.update_attribute(:second_factor_attempts_count, User.max_login_attempts)
 
       visit user_two_factor_authentication_path
 
-      expect(page).to have_content("Access completely denied")
-      expect(page).to have_content("You are signed out")
+      expect(page).to have_content('Access completely denied')
+      expect(page).to have_content('You are signed out')
     end
 
-    describe "rememberable TFA" do
+    describe 'rememberable TFA' do
       before do
         @original_remember_otp_session_for_seconds = User.remember_otp_session_for_seconds
         User.remember_otp_session_for_seconds = 30.days
@@ -120,11 +120,11 @@ feature "User of two factor authentication" do
 
         login_as user
         visit dashboard_path
-        expect(page).to have_content("Your Personal Dashboard")
-        expect(page).to have_content("You are signed in as Marissa")
+        expect(page).to have_content('Your Personal Dashboard')
+        expect(page).to have_content('You are signed in as Marissa')
       end
 
-      scenario "requires TFA code again after 30 days" do
+      scenario 'requires TFA code again after 30 days' do
         sms_sign_in
 
         logout
@@ -132,8 +132,8 @@ feature "User of two factor authentication" do
         Timecop.travel(30.days.from_now)
         login_as user
         visit dashboard_path
-        expect(page).to have_content("You are signed in as Marissa")
-        expect(page).to have_content("Enter the code that was sent to you")
+        expect(page).to have_content('You are signed in as Marissa')
+        expect(page).to have_content('Enter the code that was sent to you')
       end
 
       scenario 'TFA should be different for different users' do
@@ -172,7 +172,7 @@ feature "User of two factor authentication" do
         set_tfa_cookie(tfa_cookie1)
         login_as(user2)
         visit dashboard_path
-        expect(page).to have_content("Enter the code that was sent to you")
+        expect(page).to have_content('Enter the code that was sent to you')
       end
 
       scenario 'Delete cookie when user logs out if enabled' do
@@ -184,7 +184,7 @@ feature "User of two factor authentication" do
         login_as user
 
         visit dashboard_path
-        expect(page).to have_content("Enter the code that was sent to you")
+        expect(page).to have_content('Enter the code that was sent to you')
       end
     end
 
