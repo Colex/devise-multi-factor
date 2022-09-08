@@ -15,7 +15,7 @@ module Devise
             encrypted_attribute: 'encrypted_otp_secret_key',
           }.compact
           encrypt_options = encrypt_options.merge(options[:encrypt]) if options[:encrypt].is_a?(Hash)
-          encrypts(:otp_secret_key, encrypt_options || {})
+          has_encrypted(:otp_secret_key, **(encrypt_options || {}))
         end
 
         def generate_totp_secret
