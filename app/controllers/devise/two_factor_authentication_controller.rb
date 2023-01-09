@@ -54,6 +54,10 @@ class Devise::TwoFactorAuthenticationController < DeviseController
     end
   end
 
+  def max_login_attempts_reached
+    render :max_login_attempts_reached
+  end
+
   def after_two_factor_success_path_for(resource)
     stored_location_for(resource_name) || :root
   end
@@ -65,7 +69,7 @@ class Devise::TwoFactorAuthenticationController < DeviseController
 
     if resource.max_login_attempts?
       sign_out(resource)
-      render :max_login_attempts_reached
+      max_login_attempts_reached
     else
       render :show
     end
@@ -80,7 +84,7 @@ class Devise::TwoFactorAuthenticationController < DeviseController
     @limit = resource.max_login_attempts
     if resource.max_login_attempts?
       sign_out(resource)
-      render :max_login_attempts_reached and return
+      max_login_attempts_reached and return
     end
   end
 end
